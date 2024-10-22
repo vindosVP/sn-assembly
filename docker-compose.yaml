@@ -1,0 +1,46 @@
+services:
+  auth-postgres:
+    image: postgres:17
+    container_name: auth-postgres
+    networks:
+      - auth-network
+    env_file:
+      - auth-postgres.env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - auth-postgres_data:/var/lib/postgresql/data
+  auth-migrator:
+    image: vindosvp/postgres-migrator:latest
+    container_name: auth-migrator 
+    networks:
+      - auth-network
+    env_file:
+      - auth-migrator.env 
+    depends_on:
+      - auth-postgres
+    volumes:
+      - ./auth-migrations:/migrations  
+  auth:
+    image: vindosvp/snauth:latest
+    container_name: auth
+    networks:
+      - auth-network
+    env_file:
+      - auth.env
+    ports:
+      - "3000:3000"  
+    depends_on:
+      - auth-migrator
+      - auth-postgres
+
+volumes:
+  auth-postgres_data:
+
+networks:
+  auth-network:
+    driver: "bridge"
+    external: false

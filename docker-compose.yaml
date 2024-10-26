@@ -29,18 +29,31 @@ services:
     container_name: auth
     networks:
       - auth-network
+      - snapigw-ext-network
     env_file:
-      - auth.env
-    ports:
-      - "3000:3000"  
+      - auth.env  
     depends_on:
       - auth-migrator
       - auth-postgres
+  snapigw-ext:
+    image: vindosvp/snapigw:latest
+    container_name: snapigw-ext
+    networks:
+      - snapigw-ext-network
+    env_file:
+      - snapigw-ext.env 
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
 
 volumes:
   auth-postgres_data:
 
 networks:
   auth-network:
+    driver: "bridge"
+    external: false
+  snapigw-ext-network:
     driver: "bridge"
     external: false
